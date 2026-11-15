@@ -104,7 +104,7 @@ pip install -r AstrBot/data/plugins/astrbot_plugin_forward_link_resolver/require
 [合并转发引用材料结束]
 ```
 
-这段材料通过 `event.forward_link_context` 暴露给后续处理器，不直接篡改原始消息。转发内的文本、@、回复、图片和视频都按引用资料处理。
+这段材料暂存于当前会话，并通过 `on_llm_request` 作为本轮临时上下文注入 LLM；同时以 `event.forward_link_context` 暴露给其他处理器，不直接篡改原始消息。转发内的文本、@、回复、图片和视频都按引用资料处理。
 
 ## 安全设计
 

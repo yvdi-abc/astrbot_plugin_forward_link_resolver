@@ -20,6 +20,11 @@ from astrbot.api.event import AstrMessageEvent, filter
 from astrbot.api.star import Context, Star
 from astrbot.core.utils.astrbot_path import get_astrbot_data_path
 
+try:
+    from astrbot.core.agent.message import TextPart
+except ImportError:  # pragma: no cover - older AstrBot compatibility
+    TextPart = None
+
 
 URL_RE = re.compile(r"https?://[^\s<>\"'，。！？、）》】]+", re.I)
 CQ_RE = re.compile(r"\[CQ:(?P<kind>[a-z_]+),(?P<body>[^\]]*)\]")
@@ -202,6 +207,7 @@ class ForwardLinkResolverPlugin(Star):
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         self._dedupe: dict[str, float] = {}
         self._queue: set[str] = set()
+        self._forward_contexts: dict[str, tuple[float, str]] = {}
         self._semaphore = asyncio.Semaphore(max(1, int(self.config.get("max_concurrent", 2))))
 
     def _cfg(self, name: str, default: Any) -> Any:
@@ -466,7 +472,9 @@ class ForwardLinkResolverPlugin(Star):
             context = await self.read_forwards(event)
             if context:
                 # Keep the material available to other handlers without altering the original message.
-                setattr(event, "forward_link_context", self._render_forward_context(context))
+                rendered = self._render_forward_context(context)
+                setattr(event, "forward_link_context", rendered)
+                self._forward_contexts[self._session_key(event)] = (time.monotonic(), rendered)
             text = _message_text(event)
             manual = bool(re.match(r"^\s*(?:/)?(?:解析|parse)\b", text, re.I))
             if manual:
@@ -477,6 +485,28 @@ class ForwardLinkResolverPlugin(Star):
                 await self._handle_links(event, links, manual)
         except Exception as exc:
             logger.exception("合并转发/链接解析插件处理失败：%s", _scalar(exc, 300))
+
+    @filter.on_llm_request()
+    async def add_forward_context(self, event: AstrMessageEvent, req: Any):
+        """Add the latest forward material as temporary per-turn LLM context."""
+        item = self._forward_contexts.get(self._session_key(event))
+        if not item:
+            return
+        created, rendered = item
+        self._forward_contexts.pop(self._session_key(event), None)
+        if time.monotonic() - created > 30:
+            return
+        parts = getattr(req, "extra_user_content_parts", None)
+        if parts is None:
+            return
+        if TextPart is not None:
+            part = TextPart(text=rendered)
+            mark_temp = getattr(part, "mark_as_temp", None)
+            if callable(mark_temp):
+                part = mark_temp()
+            parts.append(part)
+        else:
+            parts.append(rendered)
 
     @filter.command("解析", alias={"parse"})
     async def parse_command(self, event: AstrMessageEvent):
