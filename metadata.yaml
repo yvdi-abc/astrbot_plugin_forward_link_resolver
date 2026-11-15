@@ -1,0 +1,10 @@
+name: astrbot_plugin_forward_link_resolver
+display_name: 合并转发与链接解析
+desc: 读取 QQ 合并转发，并把链接解析结果统一整理成原生合并转发。
+short_desc: 合并转发读取、网页预览与平台链接统一转发
+version: 0.1.0
+author: yvdi-abc
+repo: https://github.com/yvdi-abc/astrbot_plugin_forward_link_resolver
+support_platforms:
+  - aiocqhttp
+astrbot_version: ">=4.0,<5"

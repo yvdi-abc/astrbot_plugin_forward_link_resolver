@@ -1,0 +1,16 @@
+{
+  "enabled": {"type": "bool", "description": "启用插件", "default": true},
+  "auto_parse": {"type": "bool", "description": "自动解析平台分享链接", "default": true},
+  "webpage_enabled": {"type": "bool", "description": "启用网页预览", "default": true},
+  "webpage_requires_mention": {"type": "bool", "description": "普通网页必须 @ Bot", "default": true},
+  "forward_enabled": {"type": "bool", "description": "读取入站合并转发", "default": true},
+  "max_forward_depth": {"type": "int", "description": "合并转发最大嵌套深度", "default": 3, "min": 0, "max": 6},
+  "max_forward_nodes": {"type": "int", "description": "单条转发最大节点数", "default": 60, "min": 1, "max": 500},
+  "max_forward_chars": {"type": "int", "description": "单条转发最大文本字符数", "default": 18000, "min": 1000, "max": 100000},
+  "max_images": {"type": "int", "description": "单条链接最多下载预览图片数", "default": 4, "min": 0, "max": 20},
+  "max_media_mb": {"type": "int", "description": "单个预览媒体大小上限", "default": 20, "min": 1, "max": 200},
+  "request_timeout_seconds": {"type": "float", "description": "网页和平台请求超时", "default": 15, "min": 2, "max": 60},
+  "duplicate_seconds": {"type": "int", "description": "相同链接去重时间", "default": 600, "min": 0, "max": 86400},
+  "max_concurrent": {"type": "int", "description": "全局解析并发数", "default": 2, "min": 1, "max": 8},
+  "notify_failures": {"type": "bool", "description": "自动解析失败时发送说明", "default": false}
+}
